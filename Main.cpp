@@ -48,7 +48,30 @@ enum{
     FL_NEG = 1 << 2, //Negative flag
 };
 
+/*This method takes the operand if the add instruction
+is a immediate type and extends the 5 bit number to
+16 bits..*/
+uint16_t sign_extend(uint16_t x,int bit_count){
+    if((x >> (bit_count -1)) & 1){
+        x |= (0xFFFF << bit_count);
+    }
+    return x;
+}
 
+//Updates the flag bits based on the result of instruction
+void update_flags(uint16_t r)
+{
+    if(reg[r] == 0){
+        reg[R_COND] = FL_ZRO;
+    }
+    else if (reg[r] >> 15)
+    {
+        reg[R_COND] = FL_NEG;
+    }
+    else{
+        reg[R_COND] = FL_POS;
+    }
+}
 
 
 int main(int argc, const char* argv[]){
@@ -88,6 +111,30 @@ int main(int argc, const char* argv[]){
         switch (op)
         {
         case OP_ADD:
+        {
+            //Destination register bits are obtained
+            uint16_t DR=(instr >> 9) & 0x7;
+            //First operand SR1 bits obtained
+            uint16_t SR1=(instr >> 6) & 0x7;
+            //Checks if the instruction is immediate mode
+            uint16_t imm_flag = (instr >> 5) & 0x1;
+            if(imm_flag){
+                /* instr & 0x1F takes the number bits and sends 
+                them to sign_extend where 5 bit number is 
+                converted to 16 bit equivalent without changing
+                the original value*/
+                uint16_t imm5 = sign_extend(instr & 0x1F , 5);
+                reg[DR] = reg[SR1] + imm5;
+            }
+            else{
+                //isolates second operand bits
+                uint16_t SR2=instr & 0x7;
+                /*computes additon and sends the value to 
+                destination register*/
+                reg[DR]=reg[SR1]+reg[SR2];
+            }
+        update_flags(DR);                
+        }
         case OP_AND:
         case OP_NOT:
         case OP_BR:
