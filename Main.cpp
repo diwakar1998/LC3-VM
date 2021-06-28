@@ -51,5 +51,61 @@ enum{
 
 
 
-int main(){
+int main(int argc, const char* argv[]){
+
+    //Handling the inpput arguments
+    if(argc <2){
+        //Usage String
+        printf("lc3 [image-file1] ...\n");
+        exit(2);
+    }
+    //If correct input given then this code runs
+    for (int i=1;i<argc;++i){
+        if(!read_image(argv[i])){
+            printf("Failed to load image: %s\n",argv[i]);
+            exit(1);
+        }
+    }
+    //{Setup ,12};
+
+
+    /*Set PC start point to 0x3000 
+    which is the default value*/
+    enum {PC_START = 0x3000};
+    reg[R_PC] = PC_START;
+
+    int running =1;
+    while(running){
+
+        //Fetch the instruction from memory
+        uint16_t instr = mem_read(reg[R_PC]++);
+
+        /*Right Shift the left 4 bits to first 4 place
+        thereby leaving only opcode in the op variable*/
+        uint16_t op = instr >> 12;
+
+        //required operation is performed based on opcode
+        switch (op)
+        {
+        case OP_ADD:
+        case OP_AND:
+        case OP_NOT:
+        case OP_BR:
+        case OP_JMP:
+        case OP_JSR:
+        case OP_LD:
+        case OP_LDI:
+        case OP_LDR:
+        case OP_LEA:
+        case OP_ST:
+        case OP_STI:
+        case OP_STR:
+        case OP_TRAP:
+        case OP_RES:
+        case OP_RTI:
+        default:
+        
+            break;
+        }
+    }
 }
