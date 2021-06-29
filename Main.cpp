@@ -111,45 +111,130 @@ int main(int argc, const char* argv[]){
         switch (op)
         {
         case OP_ADD:
-        {
-            //Destination register bits are obtained
-            uint16_t DR=(instr >> 9) & 0x7;
-            //First operand SR1 bits obtained
-            uint16_t SR1=(instr >> 6) & 0x7;
-            //Checks if the instruction is immediate mode
-            uint16_t imm_flag = (instr >> 5) & 0x1;
-            if(imm_flag){
-                /* instr & 0x1F takes the number bits and sends 
-                them to sign_extend where 5 bit number is 
-                converted to 16 bit equivalent without changing
-                the original value*/
-                uint16_t imm5 = sign_extend(instr & 0x1F , 5);
-                reg[DR] = reg[SR1] + imm5;
+            {
+                //Destination register bits are obtained
+                uint16_t DR=(instr >> 9) & 0x7;
+                //First operand SR1 bits obtained
+                uint16_t SR1=(instr >> 6) & 0x7;
+                //Checks if the instruction is immediate mode
+                uint16_t imm_flag = (instr >> 5) & 0x1;
+                if(imm_flag){
+                    /* instr & 0x1F takes the number bits and sends 
+                    them to sign_extend where 5 bit number is 
+                    converted to 16 bit equivalent without changing
+                    the original value*/
+                    uint16_t imm5 = sign_extend(instr & 0x1F , 5);
+                    reg[DR] = reg[SR1] + imm5;
+                }
+                else{
+                    //isolates second operand bits
+                    uint16_t SR2=instr & 0x7;
+                    /*computes additon and sends the value to 
+                    destination register*/
+                    reg[DR]=reg[SR1]+reg[SR2];
+                }
+            update_flags(DR);                
             }
-            else{
-                //isolates second operand bits
-                uint16_t SR2=instr & 0x7;
-                /*computes additon and sends the value to 
-                destination register*/
-                reg[DR]=reg[SR1]+reg[SR2];
-            }
-        update_flags(DR);                
-        }
+            break;
         case OP_AND:
+            {
+                //Destination register bits are obtained
+                uint16_t DR=(instr >> 9) & 0x7;
+                //First operand SR1 bits obtained
+                uint16_t SR1=(instr >> 6) & 0x7;
+                //Checks if the instruction is immediate mode
+                uint16_t imm_flag = (instr >> 5) & 0x1;
+                if(imm_flag){
+                    /* instr & 0x1F takes the number bits and sends 
+                    them to sign_extend where 5 bit number is 
+                    converted to 16 bit equivalent without changing
+                    the original value*/
+                    uint16_t imm5 = sign_extend(instr & 0x1F , 5);
+                    reg[DR] = reg[SR1] & imm5;
+                }
+                else{
+                    //isolates second operand bits
+                    uint16_t SR2=instr & 0x7;
+                    /*computes AND of both SR's and sends 
+                    the value to destination register*/
+                    reg[DR]=reg[SR1] & reg[SR2];
+                }
+            update_flags(DR); 
+            }
+            break;
         case OP_NOT:
+            {
+                //Destination Register
+                uint16_t DR = (instr >> 9)& 0x7;
+                //Source Register
+                uint16_t SR = (instr >> 6)& 0x7;
+                //Not of SR stored in DR
+                reg[DR] = ~reg[SR];
+                update_flags(DR);
+            }
+            break;
+
         case OP_BR:
+            {
+
+            }
+
         case OP_JMP:
+            {
+                /* ALSO HANDLES RET*/
+                //Base Register 
+                uint16_t BR = (instr >> 6) & 0x7;
+
+                reg[R_PC] = reg[BR];
+            }
+            break;
         case OP_JSR:
+            {
+                uint16_t flag = (instr >> 11) & 0x1;
+                reg[R_R7] = reg[R_PC];
+                if(flag == 0){
+                    /*JSSR  --> look in the specification sheet*/
+                    //Base Register 
+                    uint16_t BR = (instr >> 6) & 0x7;
+                    reg[R_PC] = reg[BR];
+                }
+                else{
+                    //11 bits are extended to 16 bits 
+                    uint16_t pc_offset = sign_extend(instr & 0x7FF,11);
+                    reg[R_PC] += pc_offset; 
+                }
+            }
+            break;
         case OP_LD:
         case OP_LDI:
+            {
+                //Destination Register is obtained
+                uint16_t DR = (instr >> 9) & 0x7;
+                //9 bits are extended to 16 bits 
+                uint16_t pc_offset = sign_extend(instr & 0x1FF,9);
+                /*Read value of pcoffset+PC--> which is a addres location
+                then read the value in that address location*/
+                reg[DR] = mem_read(mem_read(reg[R_PC]+pc_offset));
+                update_flags(DR);
+            }
+            break;
         case OP_LDR:
+            break;
         case OP_LEA:
+            break;
         case OP_ST:
+            break;
         case OP_STI:
+            break;
         case OP_STR:
+            break;
         case OP_TRAP:
+            break;
         case OP_RES:
+            break;
+            abort();
         case OP_RTI:
+            abort();
         default:
         
             break;
