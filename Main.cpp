@@ -206,32 +206,78 @@ int main(int argc, const char* argv[]){
             }
             break;
         case OP_LD:
+            {
+                //Destination Register is obtained
+                uint16_t DR = (instr >> 9) & 0x7;
+                //9 bits are extended to 16 bits 
+                uint16_t pc_offset9 = sign_extend(instr & 0x1FF,9);
+                //Operation is loading a specific value from memory
+                reg[DR] = mem_read(reg[R_PC]+pc_offset9);
+                update_flags(DR);
+            }
         case OP_LDI:
             {
                 //Destination Register is obtained
                 uint16_t DR = (instr >> 9) & 0x7;
                 //9 bits are extended to 16 bits 
-                uint16_t pc_offset = sign_extend(instr & 0x1FF,9);
+                uint16_t pc_offset9 = sign_extend(instr & 0x1FF,9);
                 /*Read value of pcoffset+PC--> which is a addres location
                 then read the value in that address location*/
-                reg[DR] = mem_read(mem_read(reg[R_PC]+pc_offset));
+                reg[DR] = mem_read(mem_read(reg[R_PC]+pc_offset9));
                 update_flags(DR);
             }
             break;
         case OP_LDR:
+            {
+                //Destination Register is obtained
+                uint16_t DR = (instr >> 9) & 0x7;
+                //BaseRegister
+                uint16_t BR = (instr >> 6) & 0x7;
+                //Offset6 value to add to BR 
+                uint16_t offset6 = sign_extend(instr & 0x3F,6);
+                //Actual operation
+                reg[DR] = mem_read(reg[BR]+offset6);
+                update_flags(DR);
+                
+            }
             break;
         case OP_LEA:
+            {
+                //9 bits are extended to 16 bits 
+                uint16_t pc_offset9 = sign_extend(instr & 0x1FF,9);
+                //DR 
+                uint16_t DR = (instr >> 9) & 0x7;
+                reg[DR] = reg[R_PC]+pc_offset9;
+                update_flags(DR);
+            }   
             break;
         case OP_ST:
+            {
+                //Source register bits obtained
+                uint16_t SR = (instr >> 9) & 0x7;
+                uint16_t pc_offset9 = sign_extend(instr & 0x1FF,9);
+                mem_write(reg[R_PC]+pc_offset9), reg[SR]);
+            }
             break;
         case OP_STI:
+            {
+                //Source register bits obtained
+                uint16_t SR = (instr >> 9) & 0x7;
+                uint16_t pc_offset9 = sign_extend(instr & 0x1FF,9);
+                mem_write(mem_read(reg[R_PC]+pc_offset9) , reg[SR]);
+            }
+            
             break;
         case OP_STR:
+            //;-) tried to fit the code in one line i was lazy
+            mem_write(reg[((instr >> 6)&0x7)] + sign_extend(instr & 0x3F,6)) ,reg[(instr >> 9)&0x7]);
             break;
         case OP_TRAP:
+            {
+
+            }
             break;
         case OP_RES:
-            break;
             abort();
         case OP_RTI:
             abort();
